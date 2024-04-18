@@ -54,7 +54,7 @@ git clone <repository-url>
      npm install
      ```
      again, add --force flag for error case.
-5. Set up your environment variables in `.env` files for both frontend and backend.
+5. Set up your environment variables in `.env` file for backend.
      ```bash
      DATABASE_URL= your postgreSQL database URL.
      JWT_SECRET= your own secret
