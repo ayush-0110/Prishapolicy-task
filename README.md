@@ -33,6 +33,8 @@ HR Dashboard is a comprehensive human resources management system designed to fa
 ```
 ### Installation
 
+Make sure you have PostgreSQL database, VSCode installed and properly configured.
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
