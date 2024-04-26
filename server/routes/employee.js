@@ -81,7 +81,7 @@ exports.employeeRouter = (0, trpc_1.router)({
             where: { id: input.dependentId },
             include: { employee: true },
         });
-        if (!dependent || dependent.employeeId !== ((_c = ctx.user) === null || _c === void 0 ? void 0 : _c.userId)) {
+        if (!dependent || dependent.employee.email !== ((_c = ctx.user) === null || _c === void 0 ? void 0 : _c.email)) {
             throw new server_1.TRPCError({
                 code: "FORBIDDEN",
                 message: "Not allowed to update this dependent",
@@ -101,8 +101,9 @@ exports.employeeRouter = (0, trpc_1.router)({
         var _d;
         const dependent = yield prisma.dependent.findUnique({
             where: { id: input.dependentId },
+            include: { employee: true },
         });
-        if (!dependent || dependent.employeeId !== ((_d = ctx.user) === null || _d === void 0 ? void 0 : _d.userId)) {
+        if (!dependent || dependent.employee.email !== ((_d = ctx.user) === null || _d === void 0 ? void 0 : _d.email)) {
             throw new server_1.TRPCError({
                 code: "FORBIDDEN",
                 message: "Not allowed to delete this dependent",

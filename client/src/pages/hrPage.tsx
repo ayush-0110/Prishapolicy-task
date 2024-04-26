@@ -422,7 +422,7 @@ function HRPage() {
                 placeholder="Age"
                 className="myinput2"
                 type="number"
-                value={form.age}
+                value={form.age>0?form.age:"Age"}
                 onChange={handleFormChange}
               />
               <input

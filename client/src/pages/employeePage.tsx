@@ -56,12 +56,16 @@ function EmployeePage() {
 
   const handleDeleteClick = (dependentId: number) => {
     deleteDependent.mutate(
-      { dependentId },
+      { dependentId:  dependentId},
       {
         onSuccess: () => {
           refetch();
           toast.success("Successfully deleted");
           setSelectedDependent(null);
+        },
+        onError: (error) => {
+          toast.error(error.message);
+          
         },
       }
     );
@@ -90,6 +94,11 @@ function EmployeePage() {
             refetch();
             setModalOpen(false);
             toast.success("Successfully updated!");
+            setSelectedDependent(null)
+          },
+          onError: (error) => {
+            toast.error(error.message);
+            
           },
         }
       );
@@ -102,6 +111,10 @@ function EmployeePage() {
             toast.success("Successfully added!");
             setModalOpen(false);
             setForm({ name: "", age: 0, relation: "" });
+          },
+          onError: (error) => {
+            toast.error(error.message);
+            
           },
         }
       );
@@ -149,7 +162,7 @@ function EmployeePage() {
               onClick={() => handleEditClick(dependent)}
             />
             <img
-              onClick={() => handleDeleteClick(employee.id)}
+              onClick={() => handleDeleteClick(dependent.id)}
               src="/trash.svg"
               alt="delete"
             />
@@ -162,7 +175,7 @@ function EmployeePage() {
   const rightContent = selectedDependent !== null && (
     <div emp-details>
       <h1 className="heading">Dependent Details:</h1>
-      <div className="box">
+      <div className="box" style={{padding:'1rem'}}>
         <p className="data-part">
           <strong>Name: </strong> {selectedDependent.name}
         </p>

@@ -82,7 +82,7 @@ export const employeeRouter = router({
         include: { employee: true },
       });
 
-      if (!dependent || dependent.employeeId !== ctx.user?.userId) {
+      if (!dependent || dependent.employee.email !== ctx.user?.email) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Not allowed to update this dependent",
@@ -106,9 +106,10 @@ export const employeeRouter = router({
     .mutation(async ({ input, ctx }) => {
       const dependent = await prisma.dependent.findUnique({
         where: { id: input.dependentId },
+        include: { employee: true },
       });
 
-      if (!dependent || dependent.employeeId !== ctx.user?.userId) {
+      if (!dependent || dependent.employee.email !== ctx.user?.email) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Not allowed to delete this dependent",
