@@ -39,7 +39,7 @@
   border-radius: 12px;
   padding: 1rem;
   width: 70%;
-  box-shadow: 0 0 20px 15px #1a193d;
+  box-shadow: 0 0 15px 8px #1a193d;
   position: relative;
   z-index: 1;
   background-color: #201e4e;
@@ -171,6 +171,20 @@
   background-color: transparent;
   font-weight: bold;
 }
+.myinput2 {
+  padding: 1rem;
+  /* border-top: none;
+  border-right: none;
+  border-left: none; */
+  outline: none;
+  border: 2px solid rgba(216, 216, 216, 0.979);
+  border-radius: 5px;
+  width: 90%;
+  font-size: 18px;
+  margin: 0.5rem;
+  background-color: transparent;
+  font-weight: bold;
+}
 
 .inputWrapper {
   display: flex;
@@ -217,6 +231,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  /* border: 2px solid rgb(230, 233, 230); */
   /* border: 1px solid red; */
 }
 
@@ -228,7 +243,7 @@
 
 .sidebar-head{
   width: 100%;
-  border: 1px solid rgb(209, 209, 209);
+  border-bottom: 2px solid rgb(230, 233, 230);
   height: 10%;
   display: flex;
   align-items: center;
@@ -238,19 +253,20 @@
   display: flex;
   flex-direction: column;
   width: 87%;
-  border: 1px solid rgb(209, 209, 209);
+  border: 2px solid rgb(230, 233, 230);
 }
 .content-area {
   display: flex;
   /* border: 1px solid blue; */
   width: 100%;
   height: 100%;
+  overflow-y: auto;
 }
 .header {
   width: 100%;
   height: 11%;
   background-color: #edf5ff;
-  border-bottom: 2px solid rgb(209, 209, 209);
+  border-bottom: 2px solid rgb(230, 233, 230);
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -269,7 +285,7 @@
 
 .main-content {
   width: 60%;
-  border-right: 1px solid rgb(231, 226, 226);
+  border-right: 2px solid rgb(230, 233, 230);
   padding: 1rem;
   overflow-y: auto;
 }
@@ -277,8 +293,10 @@
 .right-bar {
   width: 50%;
   padding: 1rem;
+  max-height: 100%;
   overflow-y: auto;
-  /* border: 1px solid wheat; */
+  /* height: 100%; */
+  /* border: 1px solid teal; */
 }
 
 .modal {
@@ -414,26 +432,36 @@
 
 .list-box {
   position: relative;
-  border: 2px solid rgb(194, 199, 194);
+  border: 2px solid rgb(230, 233, 230);
   width: 100%;
-  height: 10%;
+  /* height: 10%; */
   display: flex;
   align-items: center;
   border-radius: 12px;
-  padding: 0.5rem;
+  cursor: pointer;
+  padding: 0.3rem;
 }
 
 .box{
   position: relative;
-  border: 2px solid rgb(194, 199, 194);
+  border: 2px solid rgb(230, 233, 230);
   width: 100%;
-  max-height: 100%;
+  min-height: 10%;
+  max-height: 80%;
   display: flex;
   flex-direction: column;
   /* align-items: center; */
   border-radius: 12px;
-  padding: 1rem;
   margin-top: 1rem;
+  overflow-y: auto;
+  
+}
+.detailing{
+  display: flex;
+  flex-direction: column;
+  /* align-items: center; */
+  width: 100%;
+  padding: 1rem;
   overflow-y: auto;
 
 }
@@ -473,7 +501,7 @@
 
 .data-part{
   font-size: 1.5rem;
-  margin: 1rem;
+  margin: 0.5rem 0;
 }
 
 .logout{
@@ -513,6 +541,83 @@
 
 .bulk-data{
   margin: 1rem;
+  padding: 0 1rem;
+}
+
+.dropdown{
+  padding: 1.5rem;
+  background-color: #ffeded;
+  font-size: 1.3rem;
+  font-weight: 500;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown img{
+  position: absolute;
+  right: 1rem;
+  cursor: pointer;
+
+}
+
+.fly-in-panel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 87%;
+  height: 100%;
+  background: white;
+  transition: right 0.3s ease-in-out;
+  /* z-index: 1000; */
+  border: 2px solid rgb(230, 233, 230);
+  /* padding: 1rem; */
+}
+
+.fly-in-panel.open {
+  right: 0;
+}
+
+#add-employee-form-div{
+  padding: 2rem;
+  display: flex;
+  height: 89%;
+  overflow-y: auto;
+  width: 60%;
+  border-right: 2px solid rgb(230, 233, 230);
+}
+
+#add-employee-form{
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 100%;
+  width: 100%;
+  /* height: 100%; */
+  /* border-right: 2px solid blue; */
+  
+}
+
+.policy-details{
+  height: 100%;
+  /* border: 2px solid brown; */
+  padding: 1rem;
+  width: 40%;
+}
+
+.policy-data{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 1rem;
+  /* align-items: center; */
+}
+
+.cont-div{
+ display: flex;
+ height: 100%;
+ width: 100%; 
 }
 
 @media (max-width: 1300px) {

@@ -4,6 +4,9 @@ import { trpc } from "../utils/trpcSetup";
 import Modal from "../components/modal";
 import { parse } from "papaparse";
 import { toast } from "react-toastify";
+import upIcon from "../components/images/up.svg";
+import downIcon from "../components/images/down.svg";
+import PolicyDetails from "../components/policyDetails";
 
 interface Dependent {
   id: number;
@@ -23,7 +26,8 @@ interface Employee {
 
 function HRPage() {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const [isBulkUploadModalOpen, setBulkUploadModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
@@ -48,19 +52,36 @@ function HRPage() {
   const uploadEmployees = trpc.hr.uploadEmployees.useMutation();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("File change triggered");
     if (event.target.files) {
-      console.log("File selected", event.target.files[0]);
+      if (event.target.files[0].type !== "text/csv") {
+        toast.error("Only CSV files are allowed.");
+        return;
+      }
       setFileSelected(true);
       parseFile(event.target.files[0]);
     }
   };
 
   const parseFile = (file: File) => {
-    console.log("parse start");
     parse(file, {
       complete: (results) => {
-        console.log(results.data)
+        if (results.errors.length > 0) {
+          toast.error("Error reading the CSV file.");
+          setBulkUploadModalOpen(false);
+          return;
+        }
+        if (results.data.length > 501) {
+          toast.error("The file cannot have more than 500 employees.");
+          setBulkUploadModalOpen(false);
+          return;
+        }
+        const headers = results.data[0] as string[];
+        const requiredHeaders = ["Name", "Age", "Email", "Contact Number"];
+        if (headers && !requiredHeaders.every((h) => headers.includes(h))) {
+          toast.error("CSV headers do not match the required format.");
+          setBulkUploadModalOpen(false);
+          return;
+        }
         const employees = results.data.slice(1).map((row: any) => ({
           name: row[0] || "",
           age: parseInt(row[1], 10) || 0,
@@ -71,10 +92,10 @@ function HRPage() {
 
         console.log(employees);
 
-        const validEmployees = employees.filter(emp => 
-          emp.name && !isNaN(emp.age) && emp.email && emp.contactNumber
+        const validEmployees = employees.filter(
+          (emp) => emp.name && !isNaN(emp.age) && emp.email && emp.contactNumber
         );
-  
+
         if (validEmployees.length !== employees.length) {
           toast.error("Some records were invalid and have been omitted.");
         }
@@ -84,6 +105,7 @@ function HRPage() {
           toast.success("File parsed successfully. Click on Upload.");
         } else {
           toast.error("No valid records to upload.");
+          setBulkUploadModalOpen(false);
         }
       },
       // header: true,
@@ -92,8 +114,6 @@ function HRPage() {
   };
 
   const handleFileUpload = () => {
-    // if (!selectedFile) return;
-
     uploadEmployees.mutate(
       { employees: parsedEmployees },
       {
@@ -113,11 +133,16 @@ function HRPage() {
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddEmployeeClick = () => {
+    if (!form.name || form.age <= 0 || !form.email || !form.contactNumber) {
+      toast.error("Please fill all fields correctly.");
+      return;
+    }
     const payload = {
       ...form,
       age: Number(form.age),
@@ -127,7 +152,8 @@ function HRPage() {
       onSuccess: () => {
         refetch();
         toast.success("Successfully added!");
-        setModalOpen(false);
+
+        setShowDetailsPanel(false);
         setForm({
           name: "",
           age: 0,
@@ -145,7 +171,7 @@ function HRPage() {
       {
         onSuccess: () => {
           refetch();
-          toast.success("Successfully added!");
+          toast.success("Successfully deleted!");
           setSelectedEmployee(null);
         },
       }
@@ -168,8 +194,8 @@ function HRPage() {
         <h3 style={{ marginBottom: "1rem" }}>General Guidelines -</h3>
         <ul>
           <li className="list">
-            The .csv file must contain only the following headers: Name, age,
-            email, contact number
+            The .csv file must contain only the following headers: Name, Age,
+            Email, Contact Number, case sensitive
           </li>
           <li className="list">
             The file cannot have more than 500 employees at one time.
@@ -214,7 +240,11 @@ function HRPage() {
         <div
           className="list-box"
           key={employee.id}
-          style={{ margin: "0.5rem 0" }}
+          style={{
+            margin: "0.3rem 0",
+            borderColor:
+              selectedEmployee === employee ? "#27378c" : "rgb(230, 233, 230)",
+          }}
           onClick={() => setSelectedEmployee(employee)}
         >
           <div className="pic">
@@ -252,45 +282,81 @@ function HRPage() {
     <div className="emp-details">
       <h1 className="heading">Employee Details</h1>
       <div className="box">
-        <p className="data-part">
-          <strong>Name: </strong> {selectedEmployee.name}
-        </p>
-        <p className="data-part">
-          <strong>Age: </strong> {selectedEmployee.age}
-        </p>
-        <p className="data-part">
-          <strong>Email: </strong> {selectedEmployee.email}
-        </p>
-        <p className="data-part">
-          <strong>Email: </strong> {selectedEmployee.contactNumber}
-        </p>
-        <h4 className="data-part">Dependents:</h4>
-        <ul>
-          {selectedEmployee.dependents &&
-          selectedEmployee.dependents.length > 0 ? (
-            selectedEmployee.dependents.map((dependent) => (
-              <li
-                className="list-box"
-                style={{ margin: "0.5rem 0" }}
-                key={dependent.id}
-              >
-                <div className="details">
-                  <div className="name">Name: {dependent.name}</div>
-                  <div className="more">
-                    Age: {dependent.age} | Relation: {dependent.relation}
+        <div
+          className="dropdown"
+          style={{ height: showDropdown ? "auto" : "100%" }}
+        >
+          Group Health Insurance
+          <img
+            src={showDropdown ? upIcon : downIcon}
+            alt="icon"
+            onClick={() => {
+              setShowDropdown(!showDropdown);
+            }}
+          />
+        </div>
+        {showDropdown && (
+          <div className="detailing">
+            <p
+              className="data-part"
+              style={{ fontSize: "1.1rem", color: "#444444" }}
+            >
+              Dependents:
+            </p>
+            <div
+              className="list-box"
+              style={{ margin: "0.3rem 0", cursor: "default" }}
+              key={selectedEmployee.id}
+            >
+              <div className="pic">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="35"
+                  height="35"
+                  fill="currentColor"
+                  className="bi bi-person"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+                </svg>
+              </div>
+
+              <div className="details">
+                <div className="name">{selectedEmployee.name}</div>
+
+                <div className="more">Age: {selectedEmployee.age}</div>
+              </div>
+            </div>
+            {selectedEmployee.dependents &&
+              selectedEmployee.dependents.length > 0 &&
+              selectedEmployee.dependents.map((dependent) => (
+                <div
+                  className="list-box"
+                  style={{ margin: "0.3rem 0", cursor: "default" }}
+                  key={dependent.id}
+                >
+                  <div className="pic">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="35"
+                      height="35"
+                      fill="currentColor"
+                      className="bi bi-person"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+                    </svg>
+                  </div>
+                  <div className="details">
+                    <div className="name">Name: {dependent.name}</div>
+                    <div className="more">
+                      Age: {dependent.age} | Relation: {dependent.relation}
+                    </div>
                   </div>
                 </div>
-              </li>
-            ))
-          ) : (
-            <p
-              style={{ fontSize: "1.4rem", color: "grey" }}
-              className="data-part"
-            >
-              No dependents listed.
-            </p>
-          )}
-        </ul>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -308,7 +374,7 @@ function HRPage() {
       headerTitle="HR Dashboard"
       headerActions={
         <>
-          <button className="btn1" onClick={() => setModalOpen(true)}>
+          <button className="btn1" onClick={() => setShowDetailsPanel(true)}>
             Add Employee
           </button>
           <button className="btn1" onClick={() => setBulkUploadModalOpen(true)}>
@@ -320,62 +386,70 @@ function HRPage() {
       rightContent={rightContent}
     >
       {bulkUploadModal}
-      <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
-        <h2
-          className="heading"
-          style={{ margin: "1rem", marginTop: "2rem", fontSize: "25px" }}
-        >
-          Add an Employee
-        </h2>
-        <form
-          className="form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleAddEmployeeClick();
-          }}
-        >
-          <input
-            name="name"
-            id="name"
-            placeholder="Name"
-            required
-            value={form.name}
-            className="myinput1"
-            onChange={handleFormChange}
-          />
-          <input
-            name="age"
-            id="age"
-            required
-            placeholder="Age"
-            className="myinput1"
-            type="number"
-            value={form.age}
-            onChange={handleFormChange}
-          />
-          <input
-            name="email"
-            id="email"
-            required
-            className="myinput1"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleFormChange}
-          />
-          <input
-            name="contactNumber"
-            id="contactNumber"
-            className="myinput1"
-            required
-            placeholder="Contact Number"
-            value={form.contactNumber}
-            onChange={handleFormChange}
-          />
-          <button className="btn1" style={{ width: "50%" }} type="submit">
-            Submit
-          </button>
-        </form>
-      </Modal>
+      <div className={`fly-in-panel ${showDetailsPanel ? "open" : ""}`}>
+        <div className="header">
+          <h2 className="heading" id="main-head">
+            Add an Employee
+          </h2>
+          <div
+            className="btndiv"
+            style={{ position: "absolute", right: "2rem" }}
+          >
+            <button className="btn1" onClick={handleAddEmployeeClick}>
+              Submit
+            </button>
+            <button className="btn1" onClick={() => setShowDetailsPanel(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+        <div className="cont-div">
+          <div id="add-employee-form-div">
+            <form id="add-employee-form">
+              <input
+                name="name"
+                id="name"
+                placeholder="Name"
+                required
+                value={form.name}
+                className="myinput2"
+                onChange={handleFormChange}
+              />
+              <input
+                name="age"
+                id="age"
+                required
+                placeholder="Age"
+                className="myinput2"
+                type="number"
+                value={form.age}
+                onChange={handleFormChange}
+              />
+              <input
+                name="email"
+                id="email"
+                required
+                className="myinput2"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleFormChange}
+              />
+              <input
+                name="contactNumber"
+                id="contactNumber"
+                className="myinput2"
+                required
+                placeholder="Contact Number"
+                value={form.contactNumber}
+                onChange={handleFormChange}
+              />
+            </form>
+          </div>
+          <div className="policy-details">
+            <PolicyDetails />
+          </div>
+        </div>
+      </div>
     </MainLayout>
   );
 }

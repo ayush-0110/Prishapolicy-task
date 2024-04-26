@@ -60,7 +60,7 @@ function EmployeePage() {
       {
         onSuccess: () => {
           refetch();
-          toast.success("Deletion successful");
+          toast.success("Successfully deleted");
           setSelectedDependent(null);
         },
       }
@@ -119,7 +119,7 @@ function EmployeePage() {
       {employee?.dependents.map((dependent) => (
         <div
           className="list-box"
-          style={{ margin: "0.5rem 0" }}
+          style={{ margin: "0.3rem 0", borderColor: selectedDependent===dependent?'#27378c':'rgb(230, 233, 230)' }}
           key={dependent.id}
           onClick={() => setSelectedDependent(dependent)}
         >

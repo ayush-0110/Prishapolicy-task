@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import userImg from "./images/userImage.png";
+import { TRPCError } from "@trpc/server";
 import { trpc } from "../utils/trpcSetup";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -24,16 +25,35 @@ function Login({ onSwitch }: AuthComponentProps) {
       { email, password, role },
       {
         onSuccess: (data) => {
-          console.log("login successful!!", data);
-  localStorage.setItem("jwtToken", data.token);
+          // console.log("login successful!!", data);
+          localStorage.setItem("jwtToken", data.token);
           toast.success("Login Successful!");
           setTimeout(() => {
             navigate("/");
           }, 1000);
         },
         onError: (error) => {
-          console.error("Login error:", error);
-          toast.error("Login Error!");
+          if (error.message[0] !== "[") {
+            toast.error(error.message);
+          } else {
+            const err = JSON.parse(error.message);
+            if (Array.isArray(err)) {
+              const errormsg = err
+                .map((el) => {
+                  if (
+                    el.message === "String must contain at least 6 character(s)"
+                  )
+                    return "Password must be at least 6 characters";
+                  else return el.message;
+                })
+                .join(` and `);
+              toast.error(errormsg);
+            } else {
+              toast.error(error.message);
+            }
+          }
+
+          setPassword("");
           setIsLoggingIn(false);
         },
       }
@@ -98,23 +118,23 @@ function Login({ onSwitch }: AuthComponentProps) {
               id="password"
             />
           </div>
-            <select
+          <select
             className="select-role"
-              value={role}
-              onChange={(e) => {
-                const newRole = e.target.value as Role;
-                setRole(newRole);
-              }}
-            >
-              <option value="EMPLOYEE">Employee</option>
-              <option value="HR_MANAGER">HR</option>
-            </select>
+            value={role}
+            onChange={(e) => {
+              const newRole = e.target.value as Role;
+              setRole(newRole);
+            }}
+          >
+            <option value="EMPLOYEE">Employee</option>
+            <option value="HR_MANAGER">HR</option>
+          </select>
 
           <div className="buttonDiv">
             <button className="btn" type="submit" disabled={isLoggingIn}>
               Login
             </button>
-            <p onClick={onSwitch} >New User? Register Here</p>
+            <p onClick={onSwitch}>New User? Register Here</p>
           </div>
         </div>
       </form>

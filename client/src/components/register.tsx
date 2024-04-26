@@ -25,8 +25,26 @@ function Register({ onSwitch }: AuthComponentProps) {
           onSwitch();
         },
         onError: (error) => {
-          console.error("Registration error:", error);
-          toast.error("Registration Error!");
+          if (error.message[0] !== "[") {
+            toast.error(error.message);
+          } else {
+            const err = JSON.parse(error.message);
+            if (Array.isArray(err)) {
+              const errormsg = err
+                .map((el) => {
+                  if (
+                    el.message === "String must contain at least 6 character(s)"
+                  )
+                    return "Password must be at least 6 characters";
+                  else return el.message;
+                })
+                .join(` and `);
+              toast.error(errormsg);
+            } else {
+              toast.error(error.message);
+            }
+          }
+          
         },
       }
     );
